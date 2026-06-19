@@ -35,9 +35,9 @@ En répétant ce processus **10 000 fois**, la fréquence de victoire converge v
 | Préflop | 2 | 50 | ~95% avec 10k simulations |
 | Flop | 5 | 47 | ~98% |
 | Turn | 6 | 46 | ~99% |
-| River | 7 | 0 (board complet) | **100% exacte** |
+| River | 7 | 45 (mains adverses) | ~99.5% avec 10k simulations |
 
-À la river, plus besoin de simuler : on énumère toutes les mains possibles pour les adversaires et on calcule le résultat exact.
+À la river, le board est complet — la simulation distribue aléatoirement des mains aux adversaires parmi les cartes restantes et évalue le résultat, comme aux autres streets.
 
 ---
 
@@ -68,9 +68,10 @@ poker-equity-calculator/
 |-----------|-------|----------|
 | Évaluation des mains | [`treys`](https://github.com/ihendley/treys) | Librairie Python légère et rapide, évalue n'importe quelle main poker en une ligne |
 | Backend / API | `FastAPI` | Simple, rapide, génère automatiquement une doc interactive |
-| Simulation | `NumPy` + Python natif | Tirage aléatoire efficace |
-| Frontend | HTML / CSS / JS vanilla | Pas de framework lourd nécessaire pour ce scope |
-| Graphique | `Chart.js` | Visualisation légère et jolie, intégrable en CDN |
+| Simulation | Python `random` natif | Tirage aléatoire efficace, zéro dépendance |
+| Frontend | HTML + Tailwind CSS + JS vanilla | Pas de framework lourd nécessaire pour ce scope |
+| Animations | `GSAP` (CDN) | Transitions fluides carte-slot et animations d'entrée |
+| Graphique | `Chart.js` (CDN) | Visualisation légère et jolie, intégrable en CDN |
 
 ---
 
@@ -91,13 +92,21 @@ poker-equity-calculator/
 git clone https://github.com/ton-pseudo/poker-equity-calculator
 cd poker-equity-calculator
 
-# 2. Installer les dépendances Python
-pip install -r backend/requirements.txt
+# 2. Créer l'environnement virtuel et installer les dépendances
+cd backend
+python -m venv .venv
 
-# 3. Lancer le backend
-uvicorn backend.main:app --reload
+# Windows
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# macOS / Linux
+.venv/bin/pip install -r requirements.txt
+
+# 3. Lancer le backend (depuis le dossier backend/)
+python -m uvicorn main:app --reload --port 8000
 
 # 4. Ouvrir frontend/index.html dans ton navigateur
+#    (double-clic ou via Live Server dans VS Code)
 ```
 
 L'API sera disponible sur `http://localhost:8000` et la doc auto sur `http://localhost:8000/docs`.

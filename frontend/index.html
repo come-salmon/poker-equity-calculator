@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poker Equity Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            felt: { 950:'#050c06', 900:'#071008', 800:'#0d1a0e', 700:'#122214', 600:'#1a2e1c', 500:'#2a4030' },
+            gold:  { 300:'#f5d88a', 400:'#f0c060', 500:'#c9a84c', 600:'#a87c30' }
+          },
+          fontFamily: {
+            sans: ['Inter','system-ui','sans-serif'],
+            display: ['Playfair Display','Georgia','serif']
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-felt-950 text-gray-100 min-h-screen">
+
+  <!-- ── Header ── -->
+  <header class="border-b border-felt-600 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="header-chip">♠</div>
+        <div>
+          <h1 class="font-display text-lg font-bold text-gold-400 tracking-wide">Poker Equity</h1>
+          <p class="text-xs text-gray-600 tracking-widest uppercase">Texas Hold'em · Monte Carlo</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div id="statusDot" class="status-dot status-dot--idle"></div>
+        <span id="statusText" class="text-xs text-gray-600 tracking-widest uppercase">Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- LEFT ──────────────────────────────── -->
+    <div class="flex flex-col gap-5">
+
+      <!-- Street progress -->
+      <div class="flex items-center">
+        <div class="street-step" id="stepPreflop">Preflop</div>
+        <div class="street-line"></div>
+        <div class="street-step" id="stepFlop">Flop</div>
+        <div class="street-line"></div>
+        <div class="street-step" id="stepTurn">Turn</div>
+        <div class="street-line"></div>
+        <div class="street-step" id="stepRiver">River</div>
+      </div>
+
+      <!-- Your Hand -->
+      <div class="panel" id="handPanel">
+        <div class="flex items-center justify-between mb-4">
+          <span class="section-label">Your Hand</span>
+          <button class="text-btn" onclick="clearHoleCards()">Clear</button>
+        </div>
+        <div class="flex gap-3">
+          <div class="card-slot" id="holeSlot0" onclick="onSlotClick('hole',0)">
+            <span class="slot-empty">?</span>
+          </div>
+          <div class="card-slot" id="holeSlot1" onclick="onSlotClick('hole',1)">
+            <span class="slot-empty">?</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Community Cards -->
+      <div class="panel">
+        <div class="flex items-center justify-between mb-4">
+          <span class="section-label">Community Cards</span>
+          <button class="text-btn" onclick="clearCommunityCards()">Clear</button>
+        </div>
+        <div class="flex items-start gap-4 flex-wrap">
+          <div>
+            <div class="group-label">Flop</div>
+            <div class="flex gap-2 mt-2">
+              <div class="card-slot card-slot--sm" id="commSlot0" onclick="onSlotClick('community',0)"><span class="slot-empty">?</span></div>
+              <div class="card-slot card-slot--sm" id="commSlot1" onclick="onSlotClick('community',1)"><span class="slot-empty">?</span></div>
+              <div class="card-slot card-slot--sm" id="commSlot2" onclick="onSlotClick('community',2)"><span class="slot-empty">?</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="group-label">Turn</div>
+            <div class="mt-2">
+              <div class="card-slot card-slot--sm" id="commSlot3" onclick="onSlotClick('community',3)"><span class="slot-empty">?</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="group-label">River</div>
+            <div class="mt-2">
+              <div class="card-slot card-slot--sm" id="commSlot4" onclick="onSlotClick('community',4)"><span class="slot-empty">?</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Settings -->
+      <div class="panel">
+        <span class="section-label block mb-4">Table Settings</span>
+        <div class="space-y-5">
+          <div>
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-gray-400">Players at table</span>
+              <span id="playersVal" class="text-gold-400 font-bold">4</span>
+            </div>
+            <input type="range" id="playersSlider" class="range-slider" min="2" max="9" value="4"
+              oninput="onPlayersChange(this.value)">
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-gray-400">Simulations</span>
+              <span id="simsVal" class="text-gold-400 font-bold">10,000</span>
+            </div>
+            <input type="range" id="simsSlider" class="range-slider" min="1000" max="50000" step="1000" value="10000"
+              oninput="onSimsChange(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <button id="calcBtn" class="calc-btn" disabled onclick="fetchEquity()">
+        <span id="calcLabel">Select your hand first</span>
+        <span id="calcSpinner" class="hidden ml-2">⟳</span>
+      </button>
+      <button class="reset-btn" onclick="resetAll()">↺ &nbsp;Reset Everything</button>
+    </div>
+
+    <!-- RIGHT ─────────────────────────────── -->
+    <div class="flex flex-col gap-5">
+
+      <!-- Equity Hero -->
+      <div class="panel text-center py-8" id="heroPanel">
+        <div class="text-xs text-gray-600 tracking-widest uppercase mb-3">Win Probability</div>
+        <div class="equity-hero" id="equityHero">—</div>
+        <div id="streetBadge" class="street-badge hidden mt-3">Preflop</div>
+        <div class="text-xs text-gray-600 mt-3" id="heroSub">Select your hand to begin</div>
+      </div>
+
+      <!-- Bars -->
+      <div class="panel space-y-5">
+        <div>
+          <div class="flex justify-between text-sm mb-2">
+            <span class="flex items-center gap-2"><span class="dot dot--green"></span><span class="text-gray-300 font-medium">Win</span></span>
+            <span class="font-bold text-green-400 tabular-nums" id="winPct">—</span>
+          </div>
+          <div class="pbar-track"><div class="pbar pbar--green" id="winBar"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-2">
+            <span class="flex items-center gap-2"><span class="dot dot--red"></span><span class="text-gray-300 font-medium">Lose</span></span>
+            <span class="font-bold text-red-400 tabular-nums" id="losePct">—</span>
+          </div>
+          <div class="pbar-track"><div class="pbar pbar--red" id="loseBar"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-2">
+            <span class="flex items-center gap-2"><span class="dot dot--amber"></span><span class="text-gray-300 font-medium">Tie</span></span>
+            <span class="font-bold text-amber-400 tabular-nums" id="tiePct">—</span>
+          </div>
+          <div class="pbar-track"><div class="pbar pbar--amber" id="tieBar"></div></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="panel flex-1">
+        <div class="flex items-center justify-between mb-4">
+          <span class="section-label">Equity History</span>
+          <span class="text-xs text-gray-600">Street by street</span>
+        </div>
+        <div style="height:220px;position:relative;">
+          <canvas id="equityChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Card Picker ── -->
+  <section class="max-w-7xl mx-auto px-4 pb-10">
+    <div class="panel">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <span class="section-label">Card Picker</span>
+        <div class="flex items-center gap-3">
+          <span id="pickerHint" class="text-xs text-gray-500"></span>
+          <button id="modeHoleBtn"      class="mode-pill mode-pill--active" onclick="setMode('hole')">Your Hand</button>
+          <button id="modeCommunityBtn" class="mode-pill"                   onclick="setMode('community')">Community</button>
+        </div>
+      </div>
+      <div id="cardPicker" class="card-picker-grid"></div>
+    </div>
+  </section>
+
+  <div id="toastContainer" class="fixed bottom-6 right-6 space-y-2 z-50"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

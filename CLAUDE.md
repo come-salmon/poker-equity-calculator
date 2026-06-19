@@ -106,6 +106,7 @@ Calcul Monte Carlo (préflop, flop, turn).
 - 0 cartes → `"preflop"`
 - 3 cartes → `"flop"`
 - 4 cartes → `"turn"`
+- 5 cartes → `"river"` (Monte Carlo, board complet — seules les mains adverses sont tirées aléatoirement)
 
 ### `POST /exact`
 
@@ -231,7 +232,7 @@ const state = {
 };
 
 async function fetchEquity() {
-  const endpoint = state.communityCards.length === 5 ? '/exact' : '/equity';
+  const endpoint = '/equity'; // Monte Carlo pour toutes les streets, y compris river
   const res = await fetch(`http://localhost:8000${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -285,4 +286,15 @@ Graphique en courbe avec l'equity (win %) sur l'axe Y (0–100%) et les streets 
 4. `frontend/index.html` + `style.css` — card picker statique
 5. `frontend/app.js` — connexion à l'API + affichage des résultats
 6. Ajout du graphique Chart.js
-7. Calcul exact à la river (`/exact`)
+7. Monte Carlo à la river via `/equity` (5 community cards) — `/exact` reste dispo dans l'API mais n'est pas utilisé par le frontend
+
+## UI — Ambitions visuelles
+
+- Stack frontend : HTML + Tailwind CSS (CDN) + JS vanilla
+- Ambiance : dark theme premium, tons vert foncé / noir / or — univers poker haut de gamme
+- Card picker interactif : grille 4 couleurs × 13 valeurs, animation au survol et au clic, cartes déjà sélectionnées grisées
+- Transitions fluides CSS entre les streets (preflop → flop → turn → river)
+- Résultats affichés avec des barres de progression animées (win/lose/tie)
+- Graphique Chart.js qui se met à jour street par street
+- Responsive mobile
+- Inspirations visuelles : PokerStars, 888poker, interfaces casino premium
